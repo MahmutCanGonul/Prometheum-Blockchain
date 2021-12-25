@@ -1,4 +1,4 @@
-
+ 
 # Module 2 - Create a Cryptocurrency
 
 # To be installed:
@@ -254,15 +254,39 @@ def get_balance():
         return 'Address is not valid!', 400
     
     balance=0
-    for i in range(len(blockchain.chain)):
-        chain = blockchain.chain[i]
-        for j in range(len(chain['transactions'])):
-             trans = chain['transactions'][j]
-             if trans['receiver'] == json['address'] and trans['sender'] == "f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0":
+    for i in range(len(hold_transactions)):
+        trans = hold_transactions[i]
+        if trans['receiver'] == json['address'] and trans['sender'] == "f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0":
                  if float(trans['amount']):
                      balance+= float(trans['amount'])
+        elif trans['receiver'] == json['address']:
+                  if 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0' in trans['amount']:
+                      balances = trans['amount'].split(',')
+                      balance+=float(balances[len(balances)-1])
+        elif trans['sender'] == json['address']:
+                  if 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0' in trans['amount']:
+                      balances = trans['amount'].split(',')
+                      balance-=float(balances[len(balances)-1])
+
     response = {'balance':balance}
     return jsonify(response),201
+
+
+@app.route('/get_address_coming_message',methods=['POST'])
+def get_address_coming_message():
+    json = request.get_json()
+    address = []
+    account_keys = ['address']
+    if not all(key in json for key in account_keys):
+        return 'Address is not valid!', 400
+    for i in range(len(hold_transactions)):
+        trans = hold_transactions[i]
+        if trans['receiver'] == json['address'] and trans['sender'] != 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0':
+            if not 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0' in trans['amount']:
+                address.append(trans['sender'])
+    response = {'addresslist':address}
+    return jsonify(response),201
+                
 
    
 
