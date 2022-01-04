@@ -456,7 +456,50 @@ def get_last_mining_time_from_address():
     response = {"timestamp":time_stamp}
     return jsonify(response),201
                 
-                
+
+@app.route('/get_best_miner_address',methods = ['GET'])
+def get_best_miner_address():
+    address = []
+    for i in range(len(blockchain.chain)):
+        block = blockchain.chain[i]
+        for j in range(len(block['transactions'])):
+            trans = block['transactions'][j]
+            if trans['sender'] == "f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0":
+                address.append(trans['receiver'])
+    count=0
+    take_counts=[]
+    uniq_address = []
+    isSame = False
+    for i in range(len(address)):
+        isSame=False
+        count=0
+        for j in range(len(address)):
+            if len(uniq_address) > 0:
+               for x in range(len(uniq_address)):
+                   if address[i] == uniq_address[x]:
+                       isSame = True
+            if i!=j and isSame==False:
+                if address[i] == address[j]:
+                    count+=1
+        if isSame == False:
+            uniq_address.append(address[i])
+            take_counts.append(count)
+    
+
+    isBigger=True
+    result = ""
+    for i in range(len(take_counts)):
+        for j in range(len(take_counts)):
+            if i!=j:
+                if take_counts[i] < take_counts[j]:
+                    isBigger=False
+        if isBigger:
+                result = uniq_address[i]
+                break
+    response = {"address":result}  
+    return jsonify(response),200            
+    
+              
 
 # Running the app
 app.run(host = '127.0.0.1', port = 5000)
