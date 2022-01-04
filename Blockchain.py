@@ -182,9 +182,20 @@ def get_special_messages():
     for i in range(len(hold_transactions)):
         trans = hold_transactions[i]
         if json['address'] == trans['receiver'] and json['other_address'] == trans['sender']:
-                messages.append(trans['amount'])
+                data = trans['amount'].split(',')
+                if len(data) > 0:
+                    if data[0] != "f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0":
+                        messages.append(trans['amount'])
+                else:
+                    messages.append(trans['amount'])
         if json['address'] == trans['sender'] and json['other_address'] == trans['receiver']:
-                messages2.append(trans['amount'])
+                data = trans['amount'].split(',')
+                if len(data) > 0:
+                    if data[0] != "f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0":
+                        messages2.append(trans['amount'])
+                else:
+                    messages2.append(trans['amount'])
+                    
         
     """
     for i in range(len(blockchain.chain)):
@@ -244,8 +255,6 @@ def get_balance():
     return jsonify(response),201
              
 """
-
-
 @app.route('/get_balance',methods=['POST'])   #Get the balance from the address
 def get_balance():
     json = request.get_json()
@@ -288,6 +297,14 @@ def get_address_coming_message():
     return jsonify(response),201
                 
 
+@app.route('/get_block_hash',methods=['GET'])
+def get_block_hash():
+    hashes = []
+    for i in range(len(blockchain.chain)):
+        block = blockchain.chain[i]
+        hashes.append(block['previous_hash'])
+    response ={"hash":hashes}
+    return jsonify(response),200
    
 
       
@@ -398,6 +415,48 @@ def replace_chain():
         response = {'message': 'All good. The chain is the largest one.',
                     'actual_chain': blockchain.chain}
     return jsonify(response), 200
+
+
+@app.route('/get_all_miners', methods = ['GET'])
+def get_all_miners():
+     miners = []
+     for i in range(len(blockchain.chain)):
+         block = blockchain.chain[i]
+         trans_data = block['transactions']
+         for j in range(len(trans_data)):
+             trans = trans_data[j]
+             if trans['sender'] == 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0':
+                 miners.append(trans['receiver'])
+     response = {"miners":miners}
+     return jsonify(response),200
+
+@app.route('/get_all_mining_datetime', methods = ['GET'])
+def get_all_mining_datetime():
+    dates = []
+    for i in range(len(blockchain.chain)):
+        if i!=0:
+            block = blockchain.chain[i]
+            dates.append(block['timestamp'])
+    response = {"timestamp":dates} 
+    return jsonify(response),200
+
+
+@app.route('/get_last_mining_time_from_address',methods = ['POST'])
+def get_last_mining_time_from_address():
+    json = request.get_json()
+    address = json['address']
+    time_stamp = "-1"
+    for i in range(len(blockchain.chain)):
+        block = blockchain.chain[i]
+        for j in range(len(block['transactions'])):
+            trans = block['transactions'][j]  
+            if trans['sender'] == 'f0b6081f8b6f472b8d27ca04537e50c4d2a17d6f05fe466db0fbf89cfe1e51f0' and trans['receiver'] == address:
+                time_stamp = block['timestamp']
+                
+    response = {"timestamp":time_stamp}
+    return jsonify(response),201
+                
+                
 
 # Running the app
 app.run(host = '127.0.0.1', port = 5000)
